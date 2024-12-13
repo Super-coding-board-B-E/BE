@@ -18,16 +18,16 @@ import java.time.LocalDateTime;
 @ToString
 public class Users {
     @Id
-    @Column(name = "user_id")@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idx")@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "user_email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "username", nullable = false)
+    @Column(name = "user_name", nullable = false)
     private String userName;
 
     @CreationTimestamp

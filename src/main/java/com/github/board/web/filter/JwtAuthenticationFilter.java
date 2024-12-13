@@ -21,23 +21,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String jwtToken = jwtTokenProvider.resolveToken(request);
 
-        if (jwtToken != null && jwtToken.startsWith("Bearer ")) {
-            jwtToken = jwtToken.substring(7); // "Bearer " 제거
-
+        if (jwtToken != null) {
             if (jwtBlacklistService.isTokenBlacklisted(jwtToken)) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그아웃된 사용자의 토큰입니다.");
                 return;
             }
 
-            if (!jwtTokenProvider.validateToken(jwtToken)) {
+            if (jwtTokenProvider.validateToken(jwtToken)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(jwtToken);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다.");
                 return;
             }
-
-            Authentication auth = jwtTokenProvider.getAuthentication(jwtToken);
-            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
-            filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response);
     }
 }
