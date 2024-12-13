@@ -4,6 +4,7 @@ import com.github.board.repository.auth.user.UserRepository;
 import com.github.board.repository.auth.user.Users;
 import com.github.board.repository.good.GoodRepository;
 import com.github.board.repository.good.Goods;
+import com.github.board.repository.post.PostRepository;
 import com.github.board.repository.post.Posts;
 import com.github.board.web.dto.good.GoodResult;
 import com.github.board.web.dto.good.GoodStatus;
@@ -22,7 +23,7 @@ public class GoodService {
 
     // 공통 로직
     protected Optional<Goods> checkExistingGood(Integer postId, Integer userId) {
-        Posts posts = postRepository.findById(postId)
+        Posts posts = postRepository.findById(Long.valueOf(postId))
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
 
         Users user = userRepository.findById(userId)
@@ -38,7 +39,7 @@ public class GoodService {
         if (existingGood.isPresent()) {
             return new GoodResult(GoodStatus.ALREADY_LIKED.getMessage(), GoodStatus.ALREADY_LIKED.getCode());
         }else {
-            Posts posts = postRepository.findById(postId).orElseThrow();
+            Posts posts = postRepository.findById(Long.valueOf(postId)).orElseThrow();
             Users user = userRepository.findById(userId).orElseThrow();
 
             goodRepository.save(new Goods(posts,user));
