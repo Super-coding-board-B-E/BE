@@ -22,7 +22,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(DataSourceProperties.class)
 @EnableJpaRepositories(
-        basePackages = {"com.github.board.repository.auth.user","com.github.board.repository.auth.role"},
+        basePackages = {
+                "com.github.board.repository.auth.user","com.github.board.repository.auth.role",
+                "com.github.board.repository.post","com.github.board.repository.comment",
+                "com.github.board.repository.good"
+
+        },
         entityManagerFactoryRef = "entityManagerFactoryBean1",
         transactionManagerRef = "tmJpa1"
 )
@@ -43,7 +48,11 @@ public class JpaConfig1 {
     public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean1(@Qualifier("dataSource1")DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);
-        em.setPackagesToScan("com.github.board.repository.auth.user","com.github.board.repository.auth.role");
+        em.setPackagesToScan(
+                "com.github.board.repository.auth.user","com.github.board.repository.auth.role",
+                "com.github.board.repository.post","com.github.board.repository.comment",
+                "com.github.board.repository.good"
+        );
 
         em.setJpaVendorAdapter(vendorAdapter);
 
