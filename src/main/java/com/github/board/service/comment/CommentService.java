@@ -3,6 +3,7 @@ package com.github.board.service.comment;
 import com.github.board.repository.auth.user.Users;
 import com.github.board.repository.comment.CommentJpaRepository;
 import com.github.board.repository.comment.Comments;
+import com.github.board.repository.post.PostRepository;
 import com.github.board.repository.post.Posts;
 import com.github.board.service.exception.NotFoundException;
 import com.github.board.web.dto.comment.Comment;
@@ -38,7 +39,7 @@ public class CommentService {
 
     //게시글 idx 로 댓글불러오기
     public List<Comment> findCommentByPostIdx(Integer postIdx) {
-        Posts post = postRepository.findById(postIdx.longValue())
+        Posts post = postRepository.findByIdx(postIdx)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 게시글 입니다."));
 
         List<Comments> comments =commentJpaRepository.findAllByPostsIdxOrderByCreatedAtAsc(postIdx);
@@ -82,7 +83,7 @@ public class CommentService {
     }
 
     //댓글 수정
-    @Transactional(transactionManager = "tmJpaComment")
+    @Transactional(transactionManager = "tmJpa1")
     public void updateComment(String id, CommentRequest commentRequest) {
         Integer idx = Integer.valueOf(id);
         Comments comment = commentJpaRepository.findByIdJoinUser(idx).orElseThrow(
