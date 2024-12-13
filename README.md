@@ -38,7 +38,7 @@
 | App  | URL         | HTTP Method | Note        | 로그인 권한 필요 |
 | ---- | ----------- | ----------- | ----------- | :-------: |
 | Post | post        | GET         | 게시판 전체 목록   |           |
-| Post | post/email  | GET         | 이메일로 목록 필터링 |     ✅     |
+| Post | post/email  | GET         | 이메일로 목록 필터링 |          |
 | Post | post/write  | POST        | 게시글 작성      |     ✅     |
 | Post | post/edit   | UPDATE      | 게시글 수정      |     ✅     |
 | Post | post/delete | DELETE      | 게시글 삭제      |     ✅     |
@@ -134,37 +134,51 @@ HTTP/1.1 200 OK Content-Type: application/json Authorization: Bearer your_access
 #### 게시물 전체 조회하는 API
 
 - HTTP 메소드: GET
-- 엔드포인트: /api/posts
+- 엔드포인트: /post
 
 응답 본문(JSON 형식):
 
 ```JSON
-{ "posts": 
-	 [
-		 { "id": 1, "title": "게시물 제목", "content": "게시물 내용", "author": "작성자", "created_at": "작성일시" },
-		 { "id": 2, "title": "게시물 제목", "content": "게시물 내용", "author": "작성자", "created_at": "작성일시" },
-	  ... 
-	  ]
-   }
+[
+    {
+        "idx": 1,
+        "title": "제목",
+        "body": "내용",
+        "email": "이메일",
+        "author": "직성자",
+        "created_at": "작성일시"
+    },
+    {
+        "idx": 2,
+        "title": "제목",
+        "body": "내용",
+        "email": "이메일",
+        "author": "작성자",
+        "created_at": "작성일시"
+    },
+ ]
 ```
 
 
 #### 작성자 이메일을 통해 특정 게시물들을 검색하는 API
 
 - HTTP 메소드: GET
-- 엔드포인트: /api/posts/search
+- 엔드포인트: /post/email
 - 쿼리 파라미터: ?author_email=[user@example.com](mailto:user@example.com)
 
 응답 본문(JSON 형식):
 
 ```JSON
-{ "posts":
-	 [ 
-		{ "id": 1, "title": "게시물 제목", "content": "게시물 내용", "author": "작성자", "created_at": "작성일시" },
-		{ "id": 3, "title": "게시물 제목", "content": "게시물 내용", "author": "작성자", "created_at": "작성일시" },
-	 ... 
-	 ]
-  }
+[
+    {
+        "idx": 2,
+        "title": "제목",
+        "body": "내용",
+        "email": "이메일",
+        "author": "작성자",
+        "created_at": "작성일시"
+    },
+ ]
 ```
 ​
 
@@ -224,7 +238,10 @@ HTTP/1.1 200 OK Content-Type: application/json Authorization: Bearer your_access
 요청 본문(JSON 형식):
 
 ```JSON
-{ "title": "게시물 제목", "content": "게시물 내용", "author": "작성자" }
+{
+    "title": "제목",
+    "body": "내용용"
+}
 ```
 
 응답 본문(JSON 형식):
@@ -263,8 +280,21 @@ HTTP/1.1 200 OK Content-Type: application/json Authorization: Bearer your_access
 - 요청 본문(JSON 형식):
 
 ```JSON
-{ "title": "수정된 게시물 제목", "content": "수정 }
+{   "idx": 4, 
+  "title": "제목",
+  "body": "내용"
+}
 ```
+
+응답 본문(JSON 형식):
+
+```
+{
+	게시글이 성공적으로 수정되었습니다.
+}
+```
+
+
 ### 좋아요를 추가할수 있는 API
 - HTTP 메소드: POST
 - 엔드포인트: /api/goods/:post_id
@@ -290,6 +320,22 @@ HTTP/1.1 200 OK Content-Type: application/json Authorization: Bearer your_access
   "status": 200
 }
 ```
+
+#### 기존 게시을 삭제하는 API
+
+- HTTP 메소드: DELETER
+- 엔드포인트: /post/DELETE
+- 로그인필요(Bearer Token)
+
+
+응답 본문(JSON 형식):
+
+```
+{
+	게시글이 성공적으로 삭제되었습니다.
+}
+```
+
 
 ## 4. 개발 일정(WBS)
 
@@ -340,8 +386,30 @@ HTTP/1.1 200 OK Content-Type: application/json Authorization: Bearer your_access
 
 ## 박 조 은
 #### 에러 및 에러 해결
-- 여기에 작성하면 됩니다.
+- 데이터베이스를 참조할 때 컬럼명은 일치시켜야 하지만, postman에서 응답하는 값은 변수명을 설정해서 바꿔도 된다. 그리고 데이터베이스의 설정에 따라서도 에러가 엄청 많이 나는 걸 알게 되어서 일단 구현해보기 위해서 무작정 이것저것 만지면서 하면 안된다.
 
+```jsx
+Posts post = postRepository.findByIdx(postRequest.getIdx())        
+.orElseThrow(() -> new InvalidValueException("해당 idx의 게시글이 없습니다."));if(!post.getUser().getUserId().equals(postRequest.getUserIdx())) {    throw new AccessDeniedException("작성자 불일치 : 게시글 수정 권한이 없습니다."); }post.setBody(postRequest.getBody());post.setTitle(postRequest.getTitle());
+```
+
+- 예외처리를 이중으로 하는 방법이 try-catch만 알았는데, else throw를 두 번씩 쓰면 더 간단하게 이중으로 처리할 수 있다.
+
+```
+        Integer userId = userDetails.getUserId();
+        Integer idx = Integer.valueOf(request.get("idx"));
+        String body = request.get("body");
+        String title = request.get("title");
+        PostRequest postRequest = new PostRequest();
+        postRequest.setTitle(title);
+        postRequest.setBody(body);
+        postRequest.setIdx(idx);
+        postRequest.setUserIdx(userId);
+        PostResponse updatedPost = postService.updateBodyByIdx(postRequest);
+        return ResponseEntity.ok("게시물이 성공적으로 수정되었습니다.");
+```
+
+- 코드는 짧을 수록 좋다고 하는데, 쓰면 쓸수록 길어진다.
 ## 김 현 지
 #### 에러 및 에러 해결
 - 댓글을 생성하는 과정에서 생성일에 값을 넣어주지 않고 insert 했더니 에러가 났다.
@@ -366,7 +434,6 @@ List<Comments> findAllByPostsIdxOrderByCreatedAtAsc(@Param("postIdx") Integer po
 
 ## 우 비 주
 #### 에러 및 에러 해결
-
 - 좋아요 기능 자체가 유저의 로그인 정보와 게시글의 정보를 가지고 하는거라, 회원가입부터 조인하면서의 오류가 많이 발생함
 - user 시간 생성부분이 null로 뜨면서 로그인자체가 안되서 시간 자동생성해주는 @PrePersist 삽입함
  ``` Java
@@ -468,7 +535,10 @@ List<Comments> findAllByPostsIdxOrderByCreatedAtAsc(@Param("postIdx") Integer po
 ## 9. 개발하며 느낀점
 ## 박 조 은
 #### 개발하며 느낀점
-- 여기에 작성하면 됩니다.
+- 내가 혼자서 구현한 게 아니라 팀원들의 도움을 받아 구현을 할 수 있었다. CTO의 역할에 대해 잘 모르고 하게 되었는데, 질문이 가장 많이 하는 CTO라고 생각이 들어서 혼자서도 오류를 찾아보고 해결하고, 공부를 더 해야겠다고 생각을 했다.
+- 이번엔 깃에 대한 사용법을 모르고, 오류가 있어서 마지막에 거의 머지할 때만 할 수가 있었는데, 합쳐보니 다시 실행이 안되는 문제가 일어나 더 어렵게 해결한 것 같다. 중간중간 확인해서 진행할 수 있도록 깃 사용법을 익혀야겠다. 
+- 좀 어렵게 생각하고 접근을 해서 오히려 간단한 문제도 스스로 해결하지 못한 것 같다. 조금은 간단하게 접근을 해봐야겠다.
+
 
 ## 김 현 지
 #### 개발하며 느낀점
