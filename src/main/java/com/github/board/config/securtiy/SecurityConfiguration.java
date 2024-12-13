@@ -40,8 +40,8 @@ public class SecurityConfiguration {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/resources/static/**","/api/login","/api/signup","/api/logout").permitAll()
-//                        .requestMatchers("/").hasAuthority("ROLE_USER")
+                        .requestMatchers("/resources/static/**","/api/login","/api/signup","/post/post","/post/email","/api/comment/post-comments").permitAll()
+                        .requestMatchers("/api/logout","/post/write","/post/edit","/post/delete","/api/comment/write","/api/comment/edit/{id}","/api/comment/delete/{id}").hasAuthority("ROLE_USER")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
